@@ -66,7 +66,7 @@ export default function Register({ onRegister, onLoginClick }: { onRegister: () 
     setLoading(true);
 
     try {
-      await axios.post("http://localhost:5000/register", formData);
+      await axios.post("/api/register", formData);
       setShowSuccessModal(true);
     } catch (err: any) {
       console.error("Registration failed:", err);

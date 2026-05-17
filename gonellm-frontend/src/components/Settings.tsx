@@ -20,7 +20,7 @@ export default function Settings({ onDelete }: { onDelete: () => void }) {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:5000/update-password",
+        "/api/update-password",
         { newPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -39,7 +39,7 @@ export default function Settings({ onDelete }: { onDelete: () => void }) {
   const handleDeleteAccount = async () => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete("http://localhost:5000/delete-account", {
+      await axios.delete("/api/delete-account", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSnackbarMessage("❌ Account deleted.");

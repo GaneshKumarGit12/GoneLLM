@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "gonellm-backend/server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "gonellm-frontend/package.json",
+      "use": "@vercel/vite"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/gonellm-backend/server.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/gonellm-frontend/dist/$1"
+    }
+  ]
+}

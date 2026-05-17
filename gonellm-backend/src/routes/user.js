@@ -4,7 +4,7 @@ import { getUserStatus, updatePassword, deleteAccount } from "../controllers/use
 
 const router = express.Router();
 
-router.get("/api/user-status", authMiddleware, getUserStatus);
+router.get("/user-status", authMiddleware, getUserStatus);
 router.post("/update-password", authMiddleware, updatePassword);
 router.delete("/delete-account", authMiddleware, deleteAccount);
 

@@ -42,7 +42,7 @@ export default function Chat() {
     const fetchTokens = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/user-status", {
+        const res = await axios.get("/api/user-status", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setTokens(res.data.tokens);
@@ -64,7 +64,7 @@ export default function Chat() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        "http://localhost:5000/chat",
+        "/api/chat",
         { message: userMessage },
         { headers: { Authorization: `Bearer ${token}` } }
       );

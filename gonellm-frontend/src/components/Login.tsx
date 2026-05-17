@@ -38,7 +38,7 @@ export default function Login({ onLogin, onSignupClick }: { onLogin: () => void;
     setError("");
 
     try {
-      const res = await axios.post("http://localhost:5000/login", {
+      const res = await axios.post("/api/login", {
         email,
         password,
       });

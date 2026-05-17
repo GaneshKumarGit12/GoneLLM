@@ -18,11 +18,15 @@ app.use(cors());              // ✅ allow frontend requests
 app.use(bodyParser.json());
 
 // Routes
-app.use(authRoutes);
-app.use(userRoutes);
-app.use(paymentRoutes);
-app.use(chatRoutes);
+app.use("/api", authRoutes);
+app.use("/api", userRoutes);
+app.use("/api", paymentRoutes);
+app.use("/api", chatRoutes);
 app.use("/api/tokens", tokenRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Backend running on port ${PORT}`));
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => console.log(`🚀 Backend running on port ${PORT}`));
+}
+
+export default app;

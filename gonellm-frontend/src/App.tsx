@@ -60,7 +60,7 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
 
     const fetchStatus = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/user-status", {
+        const res = await axios.get("/api/user-status", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setIsPremium(res.data.premium);
