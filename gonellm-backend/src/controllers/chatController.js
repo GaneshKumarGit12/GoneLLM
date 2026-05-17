@@ -12,15 +12,22 @@ export const chatWithLLaMA = async (req, res) => {
     }
 
     // Get user and check tokens
-    let user = null;
+    let usingInMemory = false;
     try {
       user = await User.findOne({ email: userEmail });
     } catch (dbError) {
       user = inMemoryUsers.get(userEmail);
+      usingInMemory = true;
     }
 
     if (!user) {
-      return res.status(400).json({ error: "User not found" });
+      if (usingInMemory) {
+        // Auto-create for Vercel stateless demo
+        user = { email: userEmail, tokens: 3000, premium: false };
+        inMemoryUsers.set(userEmail, user);
+      } else {
+        return res.status(400).json({ error: "User not found" });
+      }
     }
 
     // Check if user has tokens
@@ -112,11 +119,10 @@ export const chatWithLLaMA = async (req, res) => {
   } catch (err) {
     console.error("LLaMA API error:", err.response?.data || err.message);
     
-    // Fallback response if API fails
-    res.status(500).json({ 
-      error: "Failed to get response from LLaMA",
-      details: err.message,
-      fallback: "I'm sorry, I'm having trouble connecting to my AI backend right now. Please try again later."
+    // Return fallback response as 200 OK so frontend Chat UI doesn't crash
+    res.json({ 
+      response: "I'm sorry, I'm having trouble connecting to my AI backend right now. Please try again later. (Error: " + err.message + ")",
+      tokens: user?.tokens || 0
     });
   }
 };
