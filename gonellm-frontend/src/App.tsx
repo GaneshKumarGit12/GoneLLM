@@ -283,7 +283,7 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
   );
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}>
       {/* AppBar */}
       <AppBar
         position="sticky"
@@ -345,7 +345,7 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
         </Toolbar>
       </AppBar>
 
-      <Box sx={{ display: "flex", flex: 1 }}>
+      <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
         {/* Sidebar */}
         {loggedIn && !requiresPasswordChange && (
           <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
@@ -394,9 +394,9 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
             p: loggedIn && !requiresPasswordChange ? { xs: 2, md: 4 } : 0,
             width: { sm: `calc(100% - ${loggedIn && !requiresPasswordChange ? drawerWidth : 0}px)` },
             backgroundColor: "background.default",
-            minHeight: "calc(100vh - 64px)",
             display: "flex",
             flexDirection: "column",
+            overflowY: loggedIn && activeSection === "Chat" ? "hidden" : "auto",
           }}
         >
           {!loggedIn ? (
@@ -414,7 +414,7 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
           ) : requiresPasswordChange ? (
             <ForceChangePassword onSuccess={handleLogout} />
           ) : (
-            <Box sx={{ maxWidth: 1000, mx: "auto", width: "100%" }}>
+            <Box sx={{ maxWidth: 1000, mx: "auto", width: "100%", display: "flex", flexDirection: "column", flexGrow: 1, minHeight: 0 }}>
               {activeSection === "Profile" && <Profile />}
               {activeSection === "Settings" && <Settings onDelete={handleDelete} />}
               {activeSection === "Chat" && <Chat />}

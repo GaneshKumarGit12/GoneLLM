@@ -110,9 +110,12 @@ export default function Chat() {
       sx={{
         display: "flex",
         flexDirection: "column",
-        height: "calc(100vh - 120px)",
+        flexGrow: 1,
+        minHeight: 0,
+        height: "100%",
         maxWidth: "100%",
         mx: "auto",
+        width: "100%",
       }}
     >
       {/* Header */}
@@ -194,7 +197,7 @@ export default function Chat() {
                 justifyContent: "center",
                 height: "100%",
                 textAlign: "center",
-                py: 8,
+                py: { xs: 4, sm: 8 },
               }}
             >
               <Avatar
@@ -237,7 +240,7 @@ export default function Chat() {
                   display: "flex",
                   alignItems: "flex-start",
                   gap: 1.5,
-                  maxWidth: "70%",
+                  maxWidth: { xs: "85%", sm: "75%", md: "70%" },
                   flexDirection: m.role === "user" ? "row-reverse" : "row",
                 }}
               >
