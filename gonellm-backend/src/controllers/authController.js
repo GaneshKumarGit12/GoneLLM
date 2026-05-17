@@ -108,15 +108,26 @@ export const login = async (req, res) => {
 
     // Try MongoDB first, fallback to in-memory
     let user = null;
+    let usingInMemory = false;
     try {
       user = await User.findOne({ email });
     } catch (dbError) {
       // MongoDB not available, check in-memory
       console.log("MongoDB not available, checking in-memory storage");
       user = inMemoryUsers.get(email);
+      usingInMemory = true;
     }
 
-    if (!user) return res.status(400).json({ error: "User not found" });
+    if (!user) {
+      if (usingInMemory) {
+        console.log("Auto-creating mock user for Vercel demo mode");
+        const hashedPassword = await bcrypt.hash(password, 10);
+        user = { email, password: hashedPassword, premium: false, tokens: 3000 };
+        inMemoryUsers.set(email, user);
+      } else {
+        return res.status(400).json({ error: "User not found" });
+      }
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
