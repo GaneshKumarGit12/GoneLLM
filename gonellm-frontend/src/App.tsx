@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Chat from "./components/Chat";
-import PremiumBanner from "./components/PremiumBanner";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Profile from "./components/Profile";
 import Settings from "./components/Settings";
+import Logo from "./components/Logo";
 import {
   AppBar,
   Toolbar,
@@ -17,7 +17,6 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Container,
   Avatar,
   Box,
   IconButton,
@@ -25,21 +24,30 @@ import {
   MenuItem,
   Snackbar,
   Alert,
+  Badge,
 } from "@mui/material";
-import PersonIcon from "@mui/icons-material/Person";
-import SettingsIcon from "@mui/icons-material/Settings";
-import ChatIcon from "@mui/icons-material/Chat";
-import StarIcon from "@mui/icons-material/Star";
-import NotificationsIcon from "@mui/icons-material/Notifications";
+import {
+  Person as PersonIcon,
+  Settings as SettingsIcon,
+  Chat as ChatIcon,
+  Star,
+  Notifications,
+  Logout,
+  DarkMode,
+  LightMode,
+  Menu as MenuIcon,
+} from "@mui/icons-material";
 
-function App({ toggleTheme }: { toggleTheme: () => void }) {
-  const [isPremium, setIsPremium] = useState(false);
+function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode: boolean }) {
+  const [, setIsPremium] = useState(false);
+  const [tokens, setTokens] = useState(3000);
   const [loggedIn, setLoggedIn] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [activeSection, setActiveSection] = useState("Profile");
   const [userEmail, setUserEmail] = useState("");
   const [notifications, setNotifications] = useState<string[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   // Snackbar state
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -56,19 +64,18 @@ function App({ toggleTheme }: { toggleTheme: () => void }) {
           headers: { Authorization: `Bearer ${token}` },
         });
         setIsPremium(res.data.premium);
+        setTokens(res.data.tokens);
         setLoggedIn(true);
 
         // Decode JWT to get email
         const payload = JSON.parse(atob(token.split(".")[1]));
         setUserEmail(payload.email);
 
-        // Example notifications
         setNotifications([
           "Welcome back!",
           res.data.premium ? "🌟 Premium unlocked!" : "🚀 Upgrade to Premium for more features",
         ]);
 
-        // Show snackbar
         setSnackbarMessage("✅ Logged in successfully!");
         setSnackbarSeverity("success");
         setSnackbarOpen(true);
@@ -117,40 +124,152 @@ function App({ toggleTheme }: { toggleTheme: () => void }) {
     setSnackbarOpen(false);
   };
 
-  return (
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  const drawerWidth = 280;
+
+  const drawerContent = (
     <>
-      <AppBar
-        position="static"
+      {/* User Avatar + Premium Badge */}
+      <Box
         sx={{
-          background: "linear-gradient(90deg, #1976d2 0%, #9c27b0 100%)",
+          p: 3,
+          borderBottom: (theme) =>
+            theme.palette.mode === "dark" ? "1px solid rgba(76, 181, 245, 0.1)" : "1px solid rgba(27, 147, 205, 0.1)",
         }}
       >
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            🤖 GoneLLM
-          </Typography>
-          <Button color="inherit" onClick={toggleTheme}>
-            Toggle Theme
-          </Button>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+          <Avatar
+            sx={{
+              width: 56,
+              height: 56,
+              background: "linear-gradient(135deg, #1B93CD 0%, #4CB5F5 100%)",
+              boxShadow: "0 8px 24px rgba(27, 147, 205, 0.3)",
+              fontSize: 24,
+              fontWeight: 700,
+            }}
+          >
+            {userEmail.charAt(0).toUpperCase()}
+          </Avatar>
+          <Box sx={{ overflow: "hidden" }}>
+            <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {userEmail}
+            </Typography>
+            <Box
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 0.5,
+                px: 1.5,
+                py: 0.5,
+                borderRadius: 50,
+                background: tokens > 0
+                  ? "linear-gradient(135deg, #7AC6CB 0%, #4CA1A6 100%)"
+                  : "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                color: "white",
+                fontSize: "0.75rem",
+                fontWeight: 600,
+              }}
+            >
+              <Star sx={{ fontSize: 14 }} /> {tokens} Tokens
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+
+      {/* Navigation */}
+      <List sx={{ p: 2 }}>
+        {[
+          { text: "Profile", icon: <PersonIcon />, id: "Profile" },
+          { text: "Settings", icon: <SettingsIcon />, id: "Settings" },
+          { text: "Chat", icon: <ChatIcon />, id: "Chat" },
+        ].map((item) => (
+          <ListItem disablePadding sx={{ mb: 1 }} key={item.id}>
+            <ListItemButton
+              selected={activeSection === item.id}
+              onClick={() => { setActiveSection(item.id); setMobileOpen(false); }}
+              sx={{
+                borderRadius: 50,
+                py: 1.5,
+                px: 2.5,
+                "&.Mui-selected": {
+                  background: "linear-gradient(135deg, #1B93CD 0%, #4CB5F5 100%)",
+                  color: "white",
+                  "&:hover": {
+                    background: "linear-gradient(135deg, #11699B 0%, #1B93CD 100%)",
+                  },
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: "inherit", minWidth: 40 }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText primary={item.text} sx={{ fontWeight: 600, "& span": { fontWeight: 600 } }} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    </>
+  );
+
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      {/* AppBar */}
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+        }}
+      >
+        <Toolbar sx={{ gap: 2 }}>
+          {loggedIn && (
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              edge="start"
+              onClick={handleDrawerToggle}
+              sx={{ mr: 2, display: { sm: "none" } }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+          <Logo size="medium" />
+          <Box sx={{ flexGrow: 1 }} />
+          <IconButton color="inherit" onClick={toggleTheme}>
+            {isDarkMode ? <LightMode /> : <DarkMode />}
+          </IconButton>
           {loggedIn && (
             <>
               <IconButton color="inherit" onClick={handleNotificationsClick}>
-                <NotificationsIcon />
+                <Badge badgeContent={notifications.length} sx={{ "& .MuiBadge-badge": { backgroundColor: "#7AC6CB", color: "#fff" } }}>
+                  <Notifications />
+                </Badge>
               </IconButton>
               <Menu
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
                 onClose={handleNotificationsClose}
+                sx={{
+                  "& .MuiPaper-root": { borderRadius: 4, mt: 1, minWidth: 200, boxShadow: "0 8px 32px rgba(27, 147, 205, 0.15)" }
+                }}
               >
                 {notifications.length === 0 ? (
                   <MenuItem>No notifications</MenuItem>
                 ) : (
                   notifications.map((note, index) => (
-                    <MenuItem key={index}>{note}</MenuItem>
+                    <MenuItem key={index} sx={{ py: 1.5 }}>{note}</MenuItem>
                   ))
                 )}
               </Menu>
-              <Button color="inherit" onClick={handleLogout}>
+              <Button
+                color="inherit"
+                onClick={handleLogout}
+                startIcon={<Logout />}
+                sx={{ fontWeight: 600, display: { xs: "none", sm: "flex" } }}
+              >
                 Logout
               </Button>
             </>
@@ -158,112 +277,77 @@ function App({ toggleTheme }: { toggleTheme: () => void }) {
         </Toolbar>
       </AppBar>
 
-      <div style={{ display: "flex" }}>
+      <Box sx={{ display: "flex", flex: 1 }}>
         {/* Sidebar */}
         {loggedIn && (
-          <Drawer
-            variant="permanent"
-            anchor="left"
-            sx={{
-              "& .MuiDrawer-paper": {
-                width: 220,
-                background: "linear-gradient(180deg, #1e1e2f, #2c2c3e)",
-                color: "white",
-              },
-            }}
-          >
-            {/* User Avatar + Premium Badge */}
-            <Box
+          <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
+            <Drawer
+              variant="temporary"
+              open={mobileOpen}
+              onClose={handleDrawerToggle}
+              ModalProps={{ keepMounted: true }} // Better open performance on mobile.
               sx={{
-                display: "flex",
-                alignItems: "center",
-                flexDirection: "column",
-                p: 2,
-                borderBottom: "1px solid #444",
+                display: { xs: "block", sm: "none" },
+                "& .MuiDrawer-paper": {
+                  boxSizing: "border-box",
+                  width: drawerWidth,
+                  backgroundColor: "background.paper",
+                  backgroundImage: "none",
+                },
               }}
             >
-              <Avatar sx={{ bgcolor: "#9c27b0", mb: 1 }}>
-                {userEmail.charAt(0).toUpperCase()}
-              </Avatar>
-              <Typography variant="body1">{userEmail}</Typography>
-              <Typography variant="body2" sx={{ color: "#ffeb3b", mt: 1 }}>
-                {isPremium ? (
-                  <>
-                    <StarIcon sx={{ fontSize: 16, verticalAlign: "middle" }} /> Premium
-                  </>
-                ) : (
-                  "Free User"
-                )}
-              </Typography>
-            </Box>
-
-            {/* Navigation */}
-            <List>
-              <ListItem disablePadding>
-                <ListItemButton
-                  selected={activeSection === "Profile"}
-                  onClick={() => setActiveSection("Profile")}
-                >
-                  <ListItemIcon>
-                    <PersonIcon sx={{ color: "white" }} />
-                  </ListItemIcon>
-                  <ListItemText primary="Profile" />
-                </ListItemButton>
-              </ListItem>
-
-              <ListItem disablePadding>
-                <ListItemButton
-                  selected={activeSection === "Settings"}
-                  onClick={() => setActiveSection("Settings")}
-                >
-                  <ListItemIcon>
-                    <SettingsIcon sx={{ color: "white" }} />
-                  </ListItemIcon>
-                  <ListItemText primary="Settings" />
-                </ListItemButton>
-              </ListItem>
-
-              <ListItem disablePadding>
-                <ListItemButton
-                  selected={activeSection === "Chat"}
-                  onClick={() => setActiveSection("Chat")}
-                >
-                  <ListItemIcon>
-                    <ChatIcon sx={{ color: "white" }} />
-                  </ListItemIcon>
-                  <ListItemText primary="Chat" />
-                </ListItemButton>
-              </ListItem>
-            </List>
-          </Drawer>
+              {drawerContent}
+            </Drawer>
+            <Drawer
+              variant="permanent"
+              sx={{
+                display: { xs: "none", sm: "block" },
+                "& .MuiDrawer-paper": {
+                  boxSizing: "border-box",
+                  width: drawerWidth,
+                  backgroundColor: "background.paper",
+                  backgroundImage: "none",
+                  borderRight: "1px solid",
+                  borderColor: "divider",
+                },
+              }}
+              open
+            >
+              <Toolbar /> {/* Spacer for AppBar */}
+              {drawerContent}
+            </Drawer>
+          </Box>
         )}
 
         {/* Main Content */}
-        <Container maxWidth="sm" sx={{ mt: 4 }}>
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            p: loggedIn ? { xs: 2, md: 4 } : 0,
+            width: { sm: `calc(100% - ${loggedIn ? drawerWidth : 0}px)` },
+            backgroundColor: "background.default",
+            minHeight: "calc(100vh - 64px)",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           {!loggedIn ? (
             showRegister ? (
               <Register onRegister={() => setShowRegister(false)} />
             ) : (
-              <>
-                <Login onLogin={() => setLoggedIn(true)} />
-                <p>
-                  Don’t have an account?{" "}
-                  <button onClick={() => setShowRegister(true)}>Register</button>
-                </p>
-              </>
+              <Login onLogin={() => setLoggedIn(true)} onSignupClick={() => setShowRegister(true)} />
             )
           ) : (
-            <>
+            <Box sx={{ maxWidth: 1000, mx: "auto", width: "100%" }}>
               {activeSection === "Profile" && <Profile />}
               {activeSection === "Settings" && <Settings onDelete={handleDelete} />}
-              {activeSection === "Chat" &&
-                (isPremium ? <Chat /> : <PremiumBanner />)}
-            </>
+              {activeSection === "Chat" && <Chat />}
+            </Box>
           )}
-        </Container>
-      </div>
+        </Box>
+      </Box>
 
-      {/* Snackbar for real-time feedback */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={4000}
@@ -273,12 +357,12 @@ function App({ toggleTheme }: { toggleTheme: () => void }) {
         <Alert
           onClose={handleSnackbarClose}
           severity={snackbarSeverity}
-          sx={{ width: "100%" }}
+          sx={{ width: "100%", borderRadius: 4, boxShadow: "0 8px 32px rgba(0,0,0,0.1)" }}
         >
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </>
+    </Box>
   );
 }
 

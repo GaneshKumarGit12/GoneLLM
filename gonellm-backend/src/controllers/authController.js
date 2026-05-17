@@ -1,15 +1,92 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import inMemoryUsers from "../utils/inMemoryStore.js";
 
 export const register = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ email, password: hashedPassword });
-    await user.save();
-    res.json({ message: "User registered successfully" });
+    const { firstName, lastName, username, email, phone, password, confirmPassword } = req.body;
+
+    // Validate input
+    if (!firstName || !lastName || !username || !email || !phone || !password || !confirmPassword) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: "Invalid email format" });
+    }
+
+    // Phone validation (10 digits)
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({ error: "Phone number must be 10 digits" });
+    }
+
+    // Password validation
+    if (password.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters" });
+    }
+
+    // Confirm password validation
+    if (password !== confirmPassword) {
+      return res.status(400).json({ error: "Passwords do not match" });
+    }
+
+    // Check if user already exists (in-memory or MongoDB)
+    if (inMemoryUsers.has(email)) {
+      return res.status(400).json({ error: "User already exists with this email" });
+    }
+
+    if (inMemoryUsers.has(username)) {
+      return res.status(400).json({ error: "Username already taken" });
+    }
+
+    // Try MongoDB first, fallback to in-memory
+    try {
+      const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+      if (existingUser) {
+        if (existingUser.email === email) {
+          return res.status(400).json({ error: "User already exists with this email" });
+        }
+        if (existingUser.username === username) {
+          return res.status(400).json({ error: "Username already taken" });
+        }
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = new User({ 
+        firstName, 
+        lastName, 
+        username, 
+        email, 
+        phone, 
+        password: hashedPassword 
+      });
+      await user.save();
+      res.json({ message: "User registered successfully" });
+    } catch (dbError) {
+      // MongoDB not available, use in-memory storage
+      console.log("MongoDB not available, using in-memory storage");
+      const hashedPassword = await bcrypt.hash(password, 10);
+      inMemoryUsers.set(email, { 
+        firstName, 
+        lastName, 
+        username, 
+        email, 
+        phone, 
+        password: hashedPassword, 
+        premium: false, 
+        tokens: 3000 
+      });
+      res.json({ message: "User registered successfully (demo mode)" });
+    }
   } catch (err) {
+    console.error("Registration error:", err);
+    if (err.code === 11000) {
+      return res.status(400).json({ error: "User already exists with this email or username" });
+    }
     res.status(500).json({ error: "Registration failed", details: err.message });
   }
 };
@@ -17,7 +94,28 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: "Invalid email format" });
+    }
+
+    // Try MongoDB first, fallback to in-memory
+    let user = null;
+    try {
+      user = await User.findOne({ email });
+    } catch (dbError) {
+      // MongoDB not available, check in-memory
+      console.log("MongoDB not available, checking in-memory storage");
+      user = inMemoryUsers.get(email);
+    }
+
     if (!user) return res.status(400).json({ error: "User not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -26,6 +124,7 @@ export const login = async (req, res) => {
     const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: "1h" });
     res.json({ token });
   } catch (err) {
+    console.error("Login error:", err);
     res.status(500).json({ error: "Login failed", details: err.message });
   }
 };
