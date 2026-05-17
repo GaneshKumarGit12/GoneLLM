@@ -44,7 +44,7 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
   const [loggedIn, setLoggedIn] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [activeSection, setActiveSection] = useState("Profile");
-  const [userEmail, setUserEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [notifications, setNotifications] = useState<string[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -67,9 +67,9 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
         setTokens(res.data.tokens);
         setLoggedIn(true);
 
-        // Decode JWT to get email
+        // Decode JWT to get username
         const payload = JSON.parse(atob(token.split(".")[1]));
-        setUserEmail(payload.email);
+        setUsername(payload.username || payload.email); // Fallback to email if old token
 
         setNotifications([
           "Welcome back!",
@@ -151,11 +151,11 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
               fontWeight: 700,
             }}
           >
-            {userEmail.charAt(0).toUpperCase()}
+            {username.charAt(0).toUpperCase()}
           </Avatar>
           <Box sx={{ overflow: "hidden" }}>
             <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {userEmail}
+              {username}
             </Typography>
             <Box
               sx={{

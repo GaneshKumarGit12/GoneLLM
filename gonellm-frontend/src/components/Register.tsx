@@ -187,7 +187,7 @@ export default function Register({ onRegister, onLoginClick }: { onRegister: () 
             No form validation issue and your Registration is Successful
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Welcome to GoneLLM! You will be redirected to the Dashboard.
+            Welcome to GoneLLM! Please login with your new User Name and Password.
           </Typography>
         </DialogContent>
         <DialogActions sx={{ p: 3, justifyContent: "center" }}>
@@ -200,7 +200,7 @@ export default function Register({ onRegister, onLoginClick }: { onRegister: () 
               "&:hover": { background: "linear-gradient(135deg, #11699B 0%, #1B93CD 100%)" },
             }}
           >
-            Go to Dashboard
+            Go to Login
           </Button>
         </DialogActions>
       </Dialog>
