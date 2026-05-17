@@ -92,7 +92,11 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
         
         if (err.response?.status === 401) {
           // Token expired or invalid (e.g. backend secret changed)
-          localStorage.removeItem("token");
+          try {
+            localStorage.removeItem("token");
+          } catch (e) {
+            console.warn("localStorage restricted", e);
+          }
           setLoggedIn(false);
           setIsPremium(false);
           setRequiresPasswordChange(false);
@@ -118,7 +122,11 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
             username: urlUsername,
             password: urlDummyPassword,
           });
-          localStorage.setItem("token", res.data.token);
+          try {
+            localStorage.setItem("token", res.data.token);
+          } catch (e) {
+            console.warn("localStorage restricted", e);
+          }
           await fetchStatus(res.data.token, true);
         } catch (err) {
           console.error("Auto-login failed:", err);
@@ -131,14 +139,24 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
       return;
     }
 
-    const token = localStorage.getItem("token");
+    let token: string | null = null;
+    try {
+      token = localStorage.getItem("token");
+    } catch (e) {
+      console.warn("localStorage restricted", e);
+    }
+    
     if (token) {
       fetchStatus(token);
     }
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    try {
+      localStorage.removeItem("token");
+    } catch (e) {
+      console.warn("localStorage restricted", e);
+    }
     setLoggedIn(false);
     setIsPremium(false);
     setRequiresPasswordChange(false);

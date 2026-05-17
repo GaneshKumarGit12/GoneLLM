@@ -41,7 +41,11 @@ export default function Login({ onLogin, onSignupClick }: { onLogin: (requiresPa
         username,
         password,
       });
-      localStorage.setItem("token", res.data.token);
+      try {
+        localStorage.setItem("token", res.data.token);
+      } catch (e) {
+        console.warn("localStorage restricted", e);
+      }
       onLogin(res.data.requiresPasswordChange);
     } catch (err: any) {
       console.error("Login failed:", err);

@@ -17,7 +17,12 @@ export default function Profile() {
   const [tokens, setTokens] = useState(3000);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    let token: string | null = null;
+    try {
+      token = localStorage.getItem("token");
+    } catch (e) {
+      console.warn("localStorage restricted", e);
+    }
     if (!token) return;
 
     const fetchProfile = async () => {
