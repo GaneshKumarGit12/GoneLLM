@@ -73,7 +73,9 @@ export default function Login({ onLogin, onSignupClick }: { onLogin: () => void;
               </Typography>
               
               {forgotSuccess ? (
-                <Alert severity="success" sx={{ mb: 3 }}>Sent Email Address successfully</Alert>
+                <Alert severity="success" sx={{ mb: 3 }}>
+                  Password reset link sent successfully to {forgotEmail}
+                </Alert>
               ) : (
                 <TextField
                   margin="normal"
