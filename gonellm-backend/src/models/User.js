@@ -9,6 +9,7 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   premium: { type: Boolean, default: false },
   tokens: { type: Number, default: 3000 },
+  requiresPasswordChange: { type: Boolean, default: false },
 });
 
 export default mongoose.model("User", UserSchema);

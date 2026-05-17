@@ -13,7 +13,8 @@ export const getUserStatus = async (req, res) => {
     }
     res.json({ 
       premium: user?.premium || false,
-      tokens: user?.tokens || 3000
+      tokens: user?.tokens || 3000,
+      requiresPasswordChange: user?.requiresPasswordChange || false
     });
   } catch (err) {
     console.error("Get user status error:", err);

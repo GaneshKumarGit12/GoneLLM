@@ -5,6 +5,7 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import Profile from "./components/Profile";
 import Settings from "./components/Settings";
+import ForceChangePassword from "./components/ForceChangePassword";
 import Logo from "./components/Logo";
 import {
   AppBar,
@@ -44,6 +45,7 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
   const [loggedIn, setLoggedIn] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [activeSection, setActiveSection] = useState("Profile");
+  const [requiresPasswordChange, setRequiresPasswordChange] = useState(false);
   const [username, setUsername] = useState("");
   const [notifications, setNotifications] = useState<string[]>([]);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -66,6 +68,7 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
         setIsPremium(res.data.premium);
         setTokens(res.data.tokens);
         setLoggedIn(true);
+        setRequiresPasswordChange(res.data.requiresPasswordChange);
 
         // Decode JWT to get username
         const payload = JSON.parse(atob(token.split(".")[1]));
@@ -93,6 +96,7 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
     localStorage.removeItem("token");
     setLoggedIn(false);
     setIsPremium(false);
+    setRequiresPasswordChange(false);
     setActiveSection("Profile");
     setNotifications(["You have logged out."]);
 
@@ -104,6 +108,7 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
   const handleDelete = () => {
     setLoggedIn(false);
     setIsPremium(false);
+    setRequiresPasswordChange(false);
     setActiveSection("Profile");
     setNotifications(["Your account has been deleted."]);
 
@@ -279,7 +284,7 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
 
       <Box sx={{ display: "flex", flex: 1 }}>
         {/* Sidebar */}
-        {loggedIn && (
+        {loggedIn && !requiresPasswordChange && (
           <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
             <Drawer
               variant="temporary"
@@ -319,13 +324,12 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
           </Box>
         )}
 
-        {/* Main Content */}
         <Box
           component="main"
           sx={{
             flexGrow: 1,
-            p: loggedIn ? { xs: 2, md: 4 } : 0,
-            width: { sm: `calc(100% - ${loggedIn ? drawerWidth : 0}px)` },
+            p: loggedIn && !requiresPasswordChange ? { xs: 2, md: 4 } : 0,
+            width: { sm: `calc(100% - ${loggedIn && !requiresPasswordChange ? drawerWidth : 0}px)` },
             backgroundColor: "background.default",
             minHeight: "calc(100vh - 64px)",
             display: "flex",
@@ -336,8 +340,16 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
             showRegister ? (
               <Register onRegister={() => setShowRegister(false)} />
             ) : (
-              <Login onLogin={() => setLoggedIn(true)} onSignupClick={() => setShowRegister(true)} />
+              <Login 
+                onLogin={(reqChange) => {
+                  setRequiresPasswordChange(reqChange);
+                  setLoggedIn(true);
+                }} 
+                onSignupClick={() => setShowRegister(true)} 
+              />
             )
+          ) : requiresPasswordChange ? (
+            <ForceChangePassword onSuccess={handleLogout} />
           ) : (
             <Box sx={{ maxWidth: 1000, mx: "auto", width: "100%" }}>
               {activeSection === "Profile" && <Profile />}

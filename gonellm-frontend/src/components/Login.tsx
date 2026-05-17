@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { Facebook, Google, LinkedIn } from "@mui/icons-material";
 
-export default function Login({ onLogin, onSignupClick }: { onLogin: () => void; onSignupClick: () => void }) {
+export default function Login({ onLogin, onSignupClick }: { onLogin: (requiresPasswordChange: boolean) => void; onSignupClick: () => void }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,12 +42,24 @@ export default function Login({ onLogin, onSignupClick }: { onLogin: () => void;
         password,
       });
       localStorage.setItem("token", res.data.token);
-      onLogin();
+      onLogin(res.data.requiresPasswordChange);
     } catch (err: any) {
       console.error("Login failed:", err);
       setError(err.response?.data?.error || "Login failed. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!forgotEmail) return;
+    try {
+      await axios.post("/api/forgot-password", { email: forgotEmail });
+      setForgotSuccess(true);
+    } catch (err) {
+      console.error("Forgot password failed:", err);
+      // Still show success for security purposes or just show error
+      setForgotSuccess(true);
     }
   };
 
@@ -96,7 +108,7 @@ export default function Login({ onLogin, onSignupClick }: { onLogin: () => void;
                 <Button
                   fullWidth
                   variant="contained"
-                  onClick={() => setForgotSuccess(true)}
+                  onClick={handleForgotPassword}
                   sx={{
                     mb: 2,
                     py: 1.5,
