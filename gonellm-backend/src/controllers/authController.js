@@ -160,7 +160,15 @@ export const forgotPassword = async (req, res) => {
       usingInMemory = true;
     }
 
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) {
+      if (usingInMemory) {
+        console.log("Auto-creating mock user for Vercel demo mode in forgot password");
+        const username = email.split('@')[0];
+        user = { username, email, premium: false, tokens: 3000 };
+      } else {
+        return res.status(404).json({ error: "User not found" });
+      }
+    }
 
     // Generate dummy password
     const dummyPassword = Math.random().toString(36).slice(-8);
