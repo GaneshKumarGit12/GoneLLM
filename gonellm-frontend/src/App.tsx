@@ -57,31 +57,36 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
   const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error" | "info">("info");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlUsername = urlParams.get("username");
+    const urlDummyPassword = urlParams.get("dummyPassword");
 
-    const fetchStatus = async () => {
+    const fetchStatus = async (tokenStr: string, isAutoLogin = false) => {
       try {
         const res = await axios.get("/api/user-status", {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${tokenStr}` },
         });
         setIsPremium(res.data.premium);
         setTokens(res.data.tokens);
-        setLoggedIn(true);
         setRequiresPasswordChange(res.data.requiresPasswordChange);
+        setLoggedIn(true);
 
-        // Decode JWT to get username
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        setUsername(payload.username || payload.email); // Fallback to email if old token
+        const payload = JSON.parse(atob(tokenStr.split(".")[1]));
+        setUsername(payload.username || payload.email);
 
-        setNotifications([
-          "Welcome back!",
-          res.data.premium ? "🌟 Premium unlocked!" : "🚀 Upgrade to Premium for more features",
-        ]);
-
-        setSnackbarMessage("✅ Logged in successfully!");
-        setSnackbarSeverity("success");
-        setSnackbarOpen(true);
+        if (isAutoLogin) {
+          setSnackbarMessage("Secure session established. Please reset your password.");
+          setSnackbarSeverity("info");
+          setSnackbarOpen(true);
+        } else {
+          setNotifications([
+            "Welcome back!",
+            res.data.premium ? "🌟 Premium unlocked!" : "🚀 Upgrade to Premium for more features",
+          ]);
+          setSnackbarMessage("✅ Logged in successfully!");
+          setSnackbarSeverity("success");
+          setSnackbarOpen(true);
+        }
       } catch (err) {
         console.error("Error fetching premium status:", err);
         setSnackbarMessage("❌ Failed to fetch status.");
@@ -89,7 +94,34 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
         setSnackbarOpen(true);
       }
     };
-    fetchStatus();
+
+    if (urlUsername && urlDummyPassword) {
+      // Magic Link Auto-Login Flow
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      const autoLogin = async () => {
+        try {
+          const res = await axios.post("/api/login", {
+            username: urlUsername,
+            password: urlDummyPassword,
+          });
+          localStorage.setItem("token", res.data.token);
+          await fetchStatus(res.data.token, true);
+        } catch (err) {
+          console.error("Auto-login failed:", err);
+          setSnackbarMessage("❌ Magic link expired or invalid.");
+          setSnackbarSeverity("error");
+          setSnackbarOpen(true);
+        }
+      };
+      autoLogin();
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetchStatus(token);
+    }
   }, []);
 
   const handleLogout = () => {

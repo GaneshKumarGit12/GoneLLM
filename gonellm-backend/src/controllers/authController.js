@@ -209,12 +209,19 @@ export const forgotPassword = async (req, res) => {
       });
     }
 
+    const frontendUrl = req.headers.origin || req.headers.referer?.replace(/\/$/, "") || "https://gonellm.vercel.app";
+    const resetUrl = `${frontendUrl}/?username=${encodeURIComponent(user.username)}&dummyPassword=${encodeURIComponent(dummyPassword)}`;
+
     const info = await transporter.sendMail({
       from: process.env.SMTP_EMAIL || '"GoneLLM Demo" <noreply@gonellm.com>',
       to: email,
       subject: "GoneLLM Password Reset",
-      text: `You requested a password reset. Your temporary password is: ${dummyPassword}\n\nPlease login with this password and you will be forced to change it immediately.`,
-      html: `<p>You requested a password reset. Your temporary password is: <b>${dummyPassword}</b></p><p>Please login with this password and you will be forced to change it immediately.</p>`,
+      text: `You requested a password reset. Please click the following link to securely reset your password:\n\n${resetUrl}\n\nYou will be logged in securely and forced to change your password immediately.`,
+      html: `<p>You requested a password reset. Please click the following magic link to securely reset your password:</p>
+             <p><a href="${resetUrl}" style="display:inline-block;padding:10px 20px;background:#1B93CD;color:white;text-decoration:none;border-radius:5px;">Reset Password</a></p>
+             <p>If the button doesn't work, copy and paste this link into your browser:</p>
+             <p><code>${resetUrl}</code></p>
+             <p>You will be logged in securely and forced to change your password immediately.</p>`,
     });
 
     if (!process.env.SMTP_EMAIL) {
