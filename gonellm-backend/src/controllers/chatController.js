@@ -92,25 +92,33 @@ export const chatWithLLaMA = async (req, res) => {
     const aiResponse = response.data.choices[0].message.content;
 
     // Deduct tokens
-    try {
-      await User.updateOne(
-        { email: userEmail },
-        { $inc: { tokens: -tokenCost } }
-      );
-    } catch (dbError) {
+    if (usingInMemory) {
       const memUser = inMemoryUsers.get(userEmail);
       if (memUser) {
         memUser.tokens = Math.max(0, memUser.tokens - tokenCost);
         inMemoryUsers.set(userEmail, memUser);
       }
+    } else {
+      try {
+        await User.updateOne(
+          { email: userEmail },
+          { $inc: { tokens: -tokenCost } }
+        );
+      } catch (err) {
+        console.error("Failed to deduct tokens in DB", err);
+      }
     }
 
     // Get updated token count
     let updatedUser = null;
-    try {
-      updatedUser = await User.findOne({ email: userEmail });
-    } catch (dbError) {
+    if (usingInMemory) {
       updatedUser = inMemoryUsers.get(userEmail);
+    } else {
+      try {
+        updatedUser = await User.findOne({ email: userEmail });
+      } catch (err) {
+        console.error("Failed to fetch updated user from DB", err);
+      }
     }
 
     res.json({ 
