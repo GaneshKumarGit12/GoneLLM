@@ -132,7 +132,8 @@ export const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
 
-    const token = jwt.sign({ email: user.email, username: user.username }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const secret = process.env.JWT_SECRET || "fallback_secret_for_demo_mode";
+    const token = jwt.sign({ email: user.email, username: user.username }, secret, { expiresIn: "1h" });
     res.json({ token });
   } catch (err) {
     console.error("Login error:", err);
