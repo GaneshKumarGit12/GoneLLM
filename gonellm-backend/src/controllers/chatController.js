@@ -12,6 +12,7 @@ export const chatWithLLaMA = async (req, res) => {
     }
 
     // Get user and check tokens
+    let user = null;
     let usingInMemory = false;
     try {
       user = await User.findOne({ email: userEmail });

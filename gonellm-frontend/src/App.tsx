@@ -87,8 +87,21 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
           setSnackbarSeverity("success");
           setSnackbarOpen(true);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching premium status:", err);
+        
+        if (err.response?.status === 401) {
+          // Token expired or invalid (e.g. backend secret changed)
+          localStorage.removeItem("token");
+          setLoggedIn(false);
+          setIsPremium(false);
+          setRequiresPasswordChange(false);
+          setSnackbarMessage("Session expired. Please log in again.");
+          setSnackbarSeverity("error");
+          setSnackbarOpen(true);
+          return;
+        }
+
         setSnackbarMessage("❌ Failed to fetch status.");
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
