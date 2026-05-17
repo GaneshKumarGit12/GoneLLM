@@ -7,6 +7,7 @@ import Profile from "./components/Profile";
 import Settings from "./components/Settings";
 import ForceChangePassword from "./components/ForceChangePassword";
 import Logo from "./components/Logo";
+import { getSafeToken, setSafeToken, removeSafeToken } from "./utils/tokenStore";
 import {
   AppBar,
   Toolbar,
@@ -92,11 +93,7 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
         
         if (err.response?.status === 401) {
           // Token expired or invalid (e.g. backend secret changed)
-          try {
-            localStorage.removeItem("token");
-          } catch (e) {
-            console.warn("localStorage restricted", e);
-          }
+          removeSafeToken();
           setLoggedIn(false);
           setIsPremium(false);
           setRequiresPasswordChange(false);
@@ -122,11 +119,7 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
             username: urlUsername,
             password: urlDummyPassword,
           });
-          try {
-            localStorage.setItem("token", res.data.token);
-          } catch (e) {
-            console.warn("localStorage restricted", e);
-          }
+          setSafeToken(res.data.token);
           await fetchStatus(res.data.token, true);
         } catch (err) {
           console.error("Auto-login failed:", err);
@@ -139,12 +132,7 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
       return;
     }
 
-    let token: string | null = null;
-    try {
-      token = localStorage.getItem("token");
-    } catch (e) {
-      console.warn("localStorage restricted", e);
-    }
+    const token = getSafeToken();
     
     if (token) {
       fetchStatus(token);
@@ -152,11 +140,7 @@ function App({ toggleTheme, isDarkMode }: { toggleTheme: () => void; isDarkMode:
   }, []);
 
   const handleLogout = () => {
-    try {
-      localStorage.removeItem("token");
-    } catch (e) {
-      console.warn("localStorage restricted", e);
-    }
+    removeSafeToken();
     setLoggedIn(false);
     setIsPremium(false);
     setRequiresPasswordChange(false);

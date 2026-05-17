@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { getSafeToken } from "../utils/tokenStore";
 import {
   Box,
   TextField,
@@ -36,7 +37,7 @@ export default function ForceChangePassword({ onSuccess }: { onSuccess: () => vo
     setError("");
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getSafeToken();
       await axios.post(
         "/api/force-change-password",
         { newPassword: password },

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
+import { getSafeToken } from "../utils/tokenStore";
 import {
   Box,
   Typography,
@@ -41,7 +42,7 @@ export default function Chat() {
   useEffect(() => {
     const fetchTokens = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = getSafeToken();
         const res = await axios.get("/api/user-status", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -62,7 +63,8 @@ export default function Chat() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
+      const token = getSafeToken();
+      
       const res = await axios.post(
         "/api/chat",
         { message: userMessage },

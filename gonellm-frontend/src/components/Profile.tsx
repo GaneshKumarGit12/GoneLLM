@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { getSafeToken } from "../utils/tokenStore";
 import {
   Box,
   Typography,
@@ -17,12 +18,7 @@ export default function Profile() {
   const [tokens, setTokens] = useState(3000);
 
   useEffect(() => {
-    let token: string | null = null;
-    try {
-      token = localStorage.getItem("token");
-    } catch (e) {
-      console.warn("localStorage restricted", e);
-    }
+    const token = getSafeToken();
     if (!token) return;
 
     const fetchProfile = async () => {

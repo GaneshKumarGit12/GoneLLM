@@ -1,5 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
+import { getSafeToken, removeSafeToken } from "../utils/tokenStore";
 import {
   Box,
   Typography,
@@ -18,7 +19,7 @@ export default function Settings({ onDelete }: { onDelete: () => void }) {
 
   const handlePasswordUpdate = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getSafeToken();
       await axios.post(
         "/api/update-password",
         { newPassword },
@@ -38,14 +39,14 @@ export default function Settings({ onDelete }: { onDelete: () => void }) {
 
   const handleDeleteAccount = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getSafeToken();
       await axios.delete("/api/delete-account", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSnackbarMessage("❌ Account deleted.");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
-      localStorage.removeItem("token");
+      removeSafeToken();
       onDelete();
     } catch (err) {
       console.error("Error deleting account:", err);
